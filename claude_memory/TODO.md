@@ -5,17 +5,27 @@ para o [[CHANGELOG]].
 
 ## Curto prazo
 
+Itens abaixo também aparecem (em forma resumida) no TODO do `README.md` — o
+usuário mantém uma lista curta lá; esta aqui é a versão detalhada.
+
+- [ ] **Toolchain para compilar RISC-V** — definir/instalar toolchain (gcc/as
+      RISC-V ou similar) em vez de calcular hex à mão como foi feito nos 3
+      exemplos atuais.
+- [ ] **Montar loop em Assembly** — usar a toolchain acima pra montar um `.s` real
+      (hoje `00_test_loop.hex` foi codificado manualmente, sem assembler).
+- [ ] **Programa para converter binário em `.hex`** — script/ferramenta pra ir de
+      `.bin`/ELF gerado pela toolchain até o formato `$readmemh` usado por
+      `marvin_mem.v`.
+- [ ] **Compilar loop em C** — programa em C compilado e rodando no SoC.
 - [ ] Rodar a simulação no **Digital** (`sim/00_soc.dig`) — até agora só foi validado
       via Icarus Verilog (testbenches descartáveis, fora do repo); confirmar que o
       `.dig` também roda os `.hex` de teste corretamente.
 - [ ] Revisar dimensionamento do mapeamento de endereço da RAM em `marvin_mem.v`
       (índice fixo de 12 bits vs. `WORDS` parametrizável) — ver mirroring de 4KB
       documentado em [[ARCHITECTURE]].
-- [ ] Definir fluxo de build/assemble do software de teste (toolchain RISC-V usada
-      para gerar `.hex` de programas maiores — os 3 atuais foram montados à mão).
 - [ ] Criar algum mecanismo para trocar qual `.hex` é carregado sem editar o RTL
       (hoje o nome do arquivo está hardcoded no `initial $readmemh` de
-      `marvin_mem.v`).
+      `marvin_mem.v`, atualmente `sw/examples/00_test_mem.hex`).
 
 ## Médio prazo
 

@@ -22,7 +22,8 @@ rtl/            Fontes Verilog do SoC
   marvin_cpu.v    CPU placeholder (baseada em FemtoRV32 Quark)
   marvin_mem.v    Memória unificada (ROM + RAM)
 sim/            Simulação (atualmente 00_soc.dig — Digital simulator)
-sw/             Software / firmware (arquivos .hex carregados na memória)
+sw/             Software / firmware
+  examples/       Programas .hex de teste (ver seção abaixo)
 docs/
   help/           Notas de ajuda (git, markdown)
   specs/          PDFs das especificações RISC-V (ISA priv/unpriv, ASM)
@@ -60,10 +61,10 @@ claude_memory/  Memória do projeto para o Claude (este diretório)
     de índice — atenção, isso limita a RAM útil a 4K words dentro do array de 2048
     words do exemplo atual; ver **Known Issues** abaixo).
 - Carrega o programa inicial via `$readmemh`, apontando atualmente para
-  `sw/00_test_mem.hex` (o nome do arquivo em `initial $readmemh(...)` é trocado
-  manualmente pelo usuário conforme qual teste ele quer rodar — ver `sw/` abaixo).
-  Path base é absoluto hardcoded via `` `define HEX_FILES_PATH ``
-  (`C:/Users/andre/Downloads/PROJECTS/marvin/sw/`).
+  `sw/examples/00_test_mem.hex` (o nome do arquivo em `initial $readmemh(...)` é
+  trocado manualmente pelo usuário conforme qual teste ele quer rodar — ver
+  `sw/examples/` abaixo). Path base é absoluto hardcoded via
+  `` `define HEX_FILES_PATH `` (`C:/Users/andre/Downloads/PROJECTS/marvin/sw/examples/`).
 - `ready` é registrado (1 ciclo de latência após `valid`).
 - **RAM é espelhada (mirroring)**: só os 12 bits baixos do endereço são decodificados
   dentro da janela de RAM (1GB lógico), então só existem 4KB físicos reais de RAM
@@ -71,15 +72,15 @@ claude_memory/  Memória do projeto para o Claude (este diretório)
   `0xBFFF_FFFF`. Comentário explicando isso já está no código, acima da linha do
   `phy_address` em `marvin_mem.v`.
 
-## Programas de teste (`sw/`)
+## Programas de teste (`sw/examples/`)
 
 Três programas `.hex` escritos manualmente (RV32I puro, sem toolchain/assembler —
 os valores hex são calculados a mão), cada um com comentário por instrução:
 
-- `sw/00_test_alu.hex` — aritmética simples com x1/x2 (ADDI/ADD/SUB), termina em
+- `sw/examples/00_test_alu.hex` — aritmética simples com x1/x2 (ADDI/ADD/SUB), termina em
   loop infinito (`jal x0,0`). Resultado esperado: x1=2, x2=13.
-- `sw/00_test_loop.hex` — 4 NOPs + `jal` de volta pro início (loop infinito puro).
-- `sw/00_test_mem.hex` — usa x1 como ponteiro pra RAM (`lui x1,0x80000`), escreve
+- `sw/examples/00_test_loop.hex` — 4 NOPs + `jal` de volta pro início (loop infinito puro).
+- `sw/examples/00_test_mem.hex` — usa x1 como ponteiro pra RAM (`lui x1,0x80000`), escreve
   x2=5 na RAM, sobrescreve x2 com sentinela -1, recarrega da RAM (prova que o load
   funciona), depois faz um loop decrementando x2 de 5 até 0, e repete tudo pra
   sempre. Todos os três foram validados rodando o SoC completo com **Icarus
