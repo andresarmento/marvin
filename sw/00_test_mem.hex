@@ -1,0 +1,26 @@
+// Memory test (00_test_mem)
+// Generated with Ripes (https://github.com/mortbopet/Ripes)
+//
+// _start:
+//  lui x1, 0x80000
+//  addi x1, x1, 0
+//  lui x2, 0x00000
+//  addi x2, x0, 5
+//  sw x2 0(x1)
+//  addi x2, x0, -1
+//  lw x2, 0(x1)
+//_loop:
+//  addi x2, x2, -1
+//  bne x2, x0, _loop
+//  j _start
+
+800000B7 // lui  x1, 0x80000     -> x1 = 0x80000000 (base RAM address)
+00008093 // addi x1, x1, 0       -> x1 = x1 (just completes 32 bit load)
+00000137 // lui  x2, 0x00000     -> x2 = 0x00000000
+00500113 // addi x2, x0, 5       -> x2 = 5
+0020A023 // sw   x2, 0(x1)       -> mem[x1] = x2  (RAM[0] = 5)
+FFF00113 // addi x2, x0, -1      -> x2 = -1 (0xFFFFFFFF, write this to prove load)
+0000A103 // lw   x2, 0(x1)       -> x2 = mem[x1] = 5 (reload from RAM)
+FFF10113 // addi x2, x2, -1      -> _loop: x2 = x2 - 1
+FE011EE3 // bne  x2, x0, _loop   -> go to _loop while x2 != 0 (5,4,3,2,1,0)
+FDDFF06F // jal  x0, _start      -> jumps to _start

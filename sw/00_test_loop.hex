@@ -1,0 +1,16 @@
+// Loop in hex (00_test_loop)
+// Generated with Ripes (https://github.com/mortbopet/Ripes)
+// Just a infinite loop with four nops
+
+// _start:
+//  addi x0, x0, 0
+//  addi x0, x0, 0
+//  addi x0, x0, 0
+//  addi x0, x0, 0
+//  j _start
+
+00000013 // addi x0, x0, 0   -> nop
+00000013 // addi x0, x0, 0   -> nop
+00000013 // addi x0, x0, 0   -> nop
+00000013 // addi x0, x0, 0   -> nop
+FF1FF06F // jal  x0, -16     -> jumps to _start
