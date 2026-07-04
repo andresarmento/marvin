@@ -3,7 +3,7 @@
  *
  *
  *****************************************************************************************/
-`define HEX_FILES_PATH "C:/Users/andre/Downloads/PROJECTS/marvin/sw/"
+`define HEX_FILES_PATH "C:/Users/andre/Downloads/PROJECTS/marvin/sw/examples/"
 
 module maRVin_mem #(parameter integer WORDS = 1024) (
     input wire        clk,
