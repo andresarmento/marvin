@@ -2,6 +2,18 @@
 
 Formato: data (AAAA-MM-DD) + o que mudou e por quê. Entradas mais recentes no topo.
 
+## 2026-07-04 (continuação)
+
+- Usuário deu os dois primeiros commits do repositório:
+  - `b7ae532` "first commit! CPU and Memory" — todo o estado inicial (rtl/, sw/,
+    sim/, docs/, claude_memory/, README.md).
+  - `012964a` "organizing examples in folder" — moveu os 3 `.hex` de
+    `sw/*.hex` para `sw/examples/*.hex`, e atualizou `HEX_FILES_PATH` em
+    `rtl/marvin_mem.v` para apontar pra `sw/examples/`.
+- Usuário atualizou `README.md` com uma lista de TODO própria: toolchain RISC-V,
+  montar loop em assembly (via toolchain, não à mão), programa pra converter
+  binário em `.hex`, compilar loop em C. Refletido em [[TODO]].
+
 ## 2026-07-04
 
 - Corrigido bug em `rtl/marvin_mem.v`: `$readmemh({...}, rom)` apontava para um
