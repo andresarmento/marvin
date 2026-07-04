@@ -21,6 +21,12 @@ Restaura para versao antes do commit
 
 Releases:
   git tag -a v1.0.0 -m "Primeira versão pública"
+
+  git tag nova_tag antiga_tag       # cria a nova no mesmo commit
+  git tag -d antiga_tag             # apaga a antiga localmente
+  git push origin nova_tag          # envia a nova
+  git push origin :antiga_tag       # apaga a antiga no remoto
+
   git push origin v1.0.0
   
   No GitHub:
