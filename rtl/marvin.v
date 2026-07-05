@@ -13,7 +13,11 @@ module maRVin (
 	input clk,		            // Clock input
 	input nrst,		            // Reset (low logic)
     output [31:0] address,
-    inout  [3:0] gpio,
+    // inout [31:0] gpio,       // Real FPGA interface
+    // Digital workaround:
+    output  [1:0] gpio_out,     // pins 0,1: output 
+    input         gpio_in,      // pin 2: dedicated input-only signal, workaround for Digital's
+                                // ExternalFile/IVERILOG bridge not supporting true inout in cosimulation
     output [31:0] dbg_x1,
     output [31:0] dbg_x2,
     output [31:0] dbg_x15
@@ -21,6 +25,9 @@ module maRVin (
 
     //Tests
     assign address = cpu_addr;
+    wire [2:0] gpio;
+    assign gpio_out = gpio[1:0];
+    assign gpio[2]   = gpio_in;
 
     // CPU signals
     wire [31:0] cpu_addr; 
@@ -111,7 +118,7 @@ module maRVin (
         .wmask    (cpu_wmask),
         .valid    (gpio_valid),
         .ready    (gpio_ready),
-        .data_out (gpio_rdata),	
+        .data_out (gpio_rdata),
         .gpio     (gpio)
     );
 
