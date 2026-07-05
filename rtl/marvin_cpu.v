@@ -304,7 +304,7 @@ module maRVin_cpu #(parameter RESET_ADDR = 32'h0000_0000, parameter ADDR_WIDTH =
 
     always @(posedge clk) begin
         if(!nrst) begin
-            state <= WAIT_ALU_OR_MEM; //FETCH_INSTR; //WAIT_ALU_OR_MEM; // Just waiting for !mem_wbusy
+            state <= FETCH_INSTR;
             PC <= RESET_ADDR[ADDR_WIDTH-1:0];
             aluShamt <= 0;
             registerFile[0] <= 0;
@@ -331,7 +331,7 @@ module maRVin_cpu #(parameter RESET_ADDR = 32'h0000_0000, parameter ADDR_WIDTH =
             end
 
             state[WAIT_ALU_OR_MEM_bit]: begin
-                if(!aluBusy & mem_ready) state <= FETCH_INSTR;
+                if (!aluBusy & (mem_ready | !(isLoad | isStore))) state <= FETCH_INSTR;
             end
 
             default: begin // FETCH_INSTR

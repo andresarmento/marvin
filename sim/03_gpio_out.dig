@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<circuit>
+  <version>2</version>
+  <attributes/>
+  <visualElements>
+    <visualElement>
+      <elementName>ExternalFile</elementName>
+      <elementAttributes>
+        <entry>
+          <string>applicationType</string>
+          <appType>IVERILOG</appType>
+        </entry>
+        <entry>
+          <string>Label</string>
+          <string>maRVin</string>
+        </entry>
+        <entry>
+          <string>externalInputs</string>
+          <string>clk,nrst</string>
+        </entry>
+        <entry>
+          <string>externalOutputs</string>
+          <string>address:32,dbg_x1:32,dbg_x2:32,dbg_x15:32, gpio:4</string>
+        </entry>
+        <entry>
+          <string>Width</string>
+          <int>14</int>
+        </entry>
+        <entry>
+          <string>iverilogOptions</string>
+          <string>C:\\Users\\andre\\Downloads\\PROJECTS\\marvin\\rtl\\marvin_cpu.v
+C:\\Users\\andre\\Downloads\\PROJECTS\\marvin\\rtl\\marvin_mem.v
+C:\\Users\\andre\\Downloads\\PROJECTS\\marvin\\rtl\\marvin_gpio.v</string>
+        </entry>
+        <entry>
+          <string>CodeFile</string>
+          <file>C:\Users\andre\Downloads\PROJECTS\marvin\rtl\marvin.v</file>
+        </entry>
+      </elementAttributes>
+      <pos x="720" y="300"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Out</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Label</string>
+          <string>x1</string>
+        </entry>
+        <entry>
+          <string>Bits</string>
+          <int>32</int>
+        </entry>
+      </elementAttributes>
+      <pos x="1260" y="300"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Out</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Label</string>
+          <string>x2</string>
+        </entry>
+        <entry>
+          <string>Bits</string>
+          <int>32</int>
+        </entry>
+      </elementAttributes>
+      <pos x="1260" y="380"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Out</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Label</string>
+          <string>address</string>
+        </entry>
+        <entry>
+          <string>Bits</string>
+          <int>32</int>
+        </entry>
+      </elementAttributes>
+      <pos x="1260" y="220"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Out</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Label</string>
+          <string>x15</string>
+        </entry>
+        <entry>
+          <string>Bits</string>
+          <int>32</int>
+        </entry>
+      </elementAttributes>
+      <pos x="1260" y="460"/>
+    </visualElement>
+    <visualElement>
+      <elementName>In</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Label</string>
+          <string>Reset</string>
+        </entry>
+        <entry>
+          <string>InDefault</string>
+          <value v="1" z="false"/>
+        </entry>
+      </elementAttributes>
+      <pos x="640" y="340"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Clock</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Frequency</string>
+          <int>100</int>
+        </entry>
+        <entry>
+          <string>runRealTime</string>
+          <boolean>true</boolean>
+        </entry>
+      </elementAttributes>
+      <pos x="640" y="280"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Splitter</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Input Splitting</string>
+          <string>4</string>
+        </entry>
+        <entry>
+          <string>Output Splitting</string>
+          <string>1,1,1,1</string>
+        </entry>
+      </elementAttributes>
+      <pos x="1280" y="580"/>
+    </visualElement>
+    <visualElement>
+      <elementName>LED</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Size</string>
+          <int>0</int>
+        </entry>
+      </elementAttributes>
+      <pos x="1320" y="580"/>
+    </visualElement>
+    <visualElement>
+      <elementName>LED</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Size</string>
+          <int>0</int>
+        </entry>
+      </elementAttributes>
+      <pos x="1320" y="600"/>
+    </visualElement>
+    <visualElement>
+      <elementName>LED</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Size</string>
+          <int>0</int>
+        </entry>
+      </elementAttributes>
+      <pos x="1320" y="620"/>
+    </visualElement>
+    <visualElement>
+      <elementName>LED</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Size</string>
+          <int>0</int>
+        </entry>
+      </elementAttributes>
+      <pos x="1320" y="640"/>
+    </visualElement>
+  </visualElements>
+  <wires>
+    <wire>
+      <p1 x="680" y="320"/>
+      <p2 x="720" y="320"/>
+    </wire>
+    <wire>
+      <p1 x="1000" y="320"/>
+      <p2 x="1140" y="320"/>
+    </wire>
+    <wire>
+      <p1 x="1300" y="640"/>
+      <p2 x="1320" y="640"/>
+    </wire>
+    <wire>
+      <p1 x="1000" y="340"/>
+      <p2 x="1140" y="340"/>
+    </wire>
+    <wire>
+      <p1 x="640" y="340"/>
+      <p2 x="680" y="340"/>
+    </wire>
+    <wire>
+      <p1 x="1060" y="580"/>
+      <p2 x="1280" y="580"/>
+    </wire>
+    <wire>
+      <p1 x="1300" y="580"/>
+      <p2 x="1320" y="580"/>
+    </wire>
+    <wire>
+      <p1 x="640" y="280"/>
+      <p2 x="680" y="280"/>
+    </wire>
+    <wire>
+      <p1 x="1000" y="360"/>
+      <p2 x="1100" y="360"/>
+    </wire>
+    <wire>
+      <p1 x="1300" y="600"/>
+      <p2 x="1320" y="600"/>
+    </wire>
+    <wire>
+      <p1 x="1000" y="380"/>
+      <p2 x="1060" y="380"/>
+    </wire>
+    <wire>
+      <p1 x="1140" y="380"/>
+      <p2 x="1260" y="380"/>
+    </wire>
+    <wire>
+      <p1 x="1140" y="300"/>
+      <p2 x="1260" y="300"/>
+    </wire>
+    <wire>
+      <p1 x="680" y="300"/>
+      <p2 x="720" y="300"/>
+    </wire>
+    <wire>
+      <p1 x="1000" y="300"/>
+      <p2 x="1100" y="300"/>
+    </wire>
+    <wire>
+      <p1 x="1100" y="220"/>
+      <p2 x="1260" y="220"/>
+    </wire>
+    <wire>
+      <p1 x="1100" y="460"/>
+      <p2 x="1260" y="460"/>
+    </wire>
+    <wire>
+      <p1 x="1300" y="620"/>
+      <p2 x="1320" y="620"/>
+    </wire>
+    <wire>
+      <p1 x="1060" y="380"/>
+      <p2 x="1060" y="580"/>
+    </wire>
+    <wire>
+      <p1 x="1140" y="340"/>
+      <p2 x="1140" y="380"/>
+    </wire>
+    <wire>
+      <p1 x="1140" y="300"/>
+      <p2 x="1140" y="320"/>
+    </wire>
+    <wire>
+      <p1 x="680" y="320"/>
+      <p2 x="680" y="340"/>
+    </wire>
+    <wire>
+      <p1 x="680" y="280"/>
+      <p2 x="680" y="300"/>
+    </wire>
+    <wire>
+      <p1 x="1100" y="220"/>
+      <p2 x="1100" y="300"/>
+    </wire>
+    <wire>
+      <p1 x="1100" y="360"/>
+      <p2 x="1100" y="460"/>
+    </wire>
+  </wires>
+  <measurementOrdering/>
+</circuit>
