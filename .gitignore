@@ -1,1 +1,6 @@
 sw/toolchain/
+
+# Build artifacts from sw/examples: only .hex outputs are versioned
+*.o
+*.elf
+*.bin

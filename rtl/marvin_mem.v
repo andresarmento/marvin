@@ -19,7 +19,7 @@ module maRVin_mem #(parameter integer WORDS = 1024) (
     (* ram_style = "block" *)
     reg [31:0] memory [0:WORDS-1];
 
-    initial $readmemh({`HEX_FILES_PATH, "01_loop_asm/loop_asm.hex"}, memory);
+    initial $readmemh({`HEX_FILES_PATH, "02_loop_c/loop_c.hex"}, memory);
 
     // ROM/RAM Mapping
     parameter RAM_ADDR_BASE = 32'h 8000_0000;	// RAM Base Address
