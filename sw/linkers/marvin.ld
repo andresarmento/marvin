@@ -5,6 +5,23 @@
  * Memory map (rtl/marvin_mem.v): single 8KB physical array, address-decoded into two regions.
  * ROM starts at 0x00000000 (matches CPU RESET_ADDR), RAM starts at 0x80000000.
  * Each region is 4K, the full physical capacity per side of the array.
+
+ * Memory segments:
+ * ├─────────────────────────┼──────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────┤
+ * │ .text                   │ código (instruções)                                      │ nada — já fica pronto na ROM                                                     │
+ * ├─────────────────────────┼──────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────┤
+ * │ .rodata                 │ constantes de leitura (const, literais de string)        │ nada — fica na ROM, nunca muda, nunca precisa ir pra RAM                         │
+ * ├─────────────────────────┼──────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────┤
+ * │ .data                   │ globais/estáticas inicializadas com valor ≠ 0 (ex:       │ copiar ROM→RAM (precisa existir na RAM porque é mutável, mas o valor inicial só  │
+ * │                         │ counter = 1)                                             │ existe gravado na ROM)                                                           │
+ * ├─────────────────────────┼──────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────┤
+ * │ .bss                    │ globais/estáticas com valor 0 ou sem inicializador       │ zerar na RAM (não guarda nada na ROM, seria desperdício gravar um monte de zeros)│
+ * ├─────────────────────────┼──────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────┤
+ * │ pilha (stack)           │ variáveis locais, frames de função                       │ nada — só reserva o espaço (__stack_top), conteúdo é lixo até ser usado          │
+ * ├─────────────────────────┼──────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────┤
+ * │ heap (se existisse      │ alocação dinâmica                                        │ nada — só reserva espaço, sem inicialização                                      │
+ * │ malloc)                 │                                                          │                                                                                  │
+
  *************************************************************************************************/
 ENTRY(_start)
 
@@ -16,8 +33,11 @@ MEMORY
 
 SECTIONS
 {
+    /* .text.init (crt0's _start) is forced first: the CPU always fetches from
+       RESET_ADDR on reset, regardless of the link order of the other objects. */
     .text : ALIGN(4)
     {
+        KEEP(*(.text.init))
         *(.text .text.* .gnu.linkonce.t.*)
     } > rom
 

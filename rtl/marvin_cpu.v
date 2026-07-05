@@ -25,14 +25,14 @@ module maRVin_cpu #(parameter RESET_ADDR = 32'h0000_0000, parameter ADDR_WIDTH =
    input  mem_ready,        // memory returns ready = 1 when operation completes
    output [31:0] dbg_x1,
    output [31:0] dbg_x2,
-   output [31:0] dbg_x3,
+   output [31:0] dbg_x15,
    output [3:0] dbg_state
 );
 
     // Test signals
     assign dbg_x1 = registerFile[1];
     assign dbg_x2 = registerFile[2];
-    assign dbg_x3 = registerFile[3];
+    assign dbg_x15 = registerFile[15];
     assign dbg_state = state;
 
     /***************************************************************************/

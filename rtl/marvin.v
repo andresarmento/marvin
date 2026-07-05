@@ -14,7 +14,7 @@ module maRVin (
     output [31:0] address,
     output [31:0] dbg_x1,
     output [31:0] dbg_x2,
-    output [31:0] dbg_x3,
+    output [31:0] dbg_x15,
     output [3:0]  dbg_state
 );
 
@@ -51,7 +51,7 @@ module maRVin (
         .mem_ready (cpu_ready),
         .dbg_x1 (dbg_x1),
         .dbg_x2 (dbg_x2),
-        .dbg_x3 (dbg_x3),
+        .dbg_x15 (dbg_x15),
         .dbg_state (dbg_state)
     );
 
