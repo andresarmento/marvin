@@ -6,8 +6,11 @@ Por enquanto vou usando a atual para poder ir avançando o SoC
 
 ## TODO
 
-* Compilar loop em C
+* GPIO in
+* Serial
 
 ## History
 * First commit - Soc com CPU e memória
 * Toolchain para compilar risc-v e exemplo em asm + tool bin2hex
+* Compilando C e startup file : crt0.S
+* GPIO (output)
