@@ -8,26 +8,25 @@
 
 void gpio_write(int pin, int value) {
   if (pin < 0 || pin > 31) return;
-  if (value)
-    GPIO_OUT |= (0x0001u << pin);
+  if (value) 
+    GPIO_SET = (0x0001 << pin);
   else
-    GPIO_OUT &= ~(0x0001u << pin);
+    GPIO_CLR = (0x0001 << pin);
 }
 
 int gpio_read(int pin) {
-  if (pin < 0 || pin > 31) return 0;
-  return (GPIO_OUT >> pin) & 0x1;
+  return (GPIO_READ >> pin) & 0x1;
 }
 
 void gpio_dir(int pin, int value) {
   if (pin < 0 || pin > 31) return;
   if (value)
-    GPIO_DIR |= (0x0001u << pin);
+    GPIO_DIR_SET = (0x0001 << pin);
   else
-    GPIO_DIR &= ~(0x0001u << pin);
+    GPIO_DIR_CLR = (0x0001 << pin);
 }
 
 void gpio_toggle(int pin) {
   if (pin < 0 || pin > 31) return;
-  gpio_write(pin, !gpio_read(pin));
+  GPIO_TOG = (0x0001 << pin);
 }

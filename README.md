@@ -6,11 +6,13 @@ Por enquanto vou usando a atual para poder ir avançando o SoC
 
 ## TODO
 
-* GPIO in
 * Serial
+* Revisar e trocar comentários de portugues para ingles
+* Verificar se precisamos de mais comentários em marvin.ld, crt0.S, marvin.v e marvin_gpio.v
 
 ## History
 * First commit - Soc com CPU e memória
 * Toolchain para compilar risc-v e exemplo em asm + tool bin2hex
 * Compilando C e startup file : crt0.S
 * GPIO (output)
+* GPIO (input)
