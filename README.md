@@ -6,8 +6,14 @@ Por enquanto vou usando a atual para poder ir avançando o SoC
 
 ## TODO
 
-* Serial
+* Testar a entrada da Serial (RX)
+* FPGA test
+* Memory mapper
+* Timer
+* Serial ser configurável via sua propria interface
+* Suportar mais de uma serial
 * Revisar e trocar comentários de portugues para ingles
+* Acho que vou mudar o makefile para que os objetos fiquem todos compilados na pasta de cada exemplo... ainda nao decidi
 * Verificar se precisamos de mais comentários em marvin.ld, crt0.S, marvin.v e marvin_gpio.v
 
 ## History
@@ -16,3 +22,4 @@ Por enquanto vou usando a atual para poder ir avançando o SoC
 * Compilando C e startup file : crt0.S
 * GPIO (output)
 * GPIO (input)
+* Interface Serial (UART TX)
