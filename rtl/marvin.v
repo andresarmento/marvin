@@ -4,30 +4,23 @@
  *
  *
  * Devices:
- * 	 Memory (maRVin_mem) : 0h'0000_0000 (ROM)
- * 	                       0h'8000_0000 (RAM)
- * 	 GPIO   (maRVin_gpio): 0h'C000_0000
+ * 	 Memory (maRVin_mem) :  0h'0000_0000 (ROM)
+ * 	                        0h'8000_0000 (RAM)
+ * 	 GPIO   (maRVin_gpio):  0h'C000_0000
+ * 	 UART1  (maRVin_uart):  0h'C000_1000
  *********************************************************************************/
 
 module maRVin (
-	input clk,		            // Clock input
-	input nrst,		            // Reset (low logic)
+	input clk,	
+	input nrst,	
     output [31:0] address,
-    // inout [31:0] gpio,       // Real FPGA interface
-    // Digital workaround:
-    output  [1:0] gpio_out,     // pins 0,1: output 
-    input         gpio_in,      // pin 2: dedicated input-only signal, workaround for Digital's
-                                // ExternalFile/IVERILOG bridge not supporting true inout in cosimulation
-    output [31:0] dbg_x1,
-    output [31:0] dbg_x2,
-    output [31:0] dbg_x15
+    inout [31:0] gpio,      
+    output uart1_tx,
+    input uart1_rx
 );
 
     //Tests
     assign address = cpu_addr;
-    wire [2:0] gpio;
-    assign gpio_out = gpio[1:0];
-    assign gpio[2]   = gpio_in;
 
     // CPU signals
     wire [31:0] cpu_addr; 
@@ -47,6 +40,11 @@ module maRVin (
     wire gpio_ready;
     wire gpio_valid;
 
+    // UART1 signals
+	wire [31:0] uart1_rdata;
+	wire uart1_ready;
+   	wire uart1_valid;
+
 	// Mapeamento da memória ROM
     localparam ROM_ADDR_BASE = 32'h 0000_0000;	// Este endereco e máscara vão selecionar a ROM para
     localparam ROM_ADDR_MASK = 32'h 8000_0000;   // qualquer endereco na faixa de 0000_0000 a 7FFF_FFFF
@@ -63,18 +61,26 @@ module maRVin (
     localparam GPIO_ADDR_BASE = 32'h C000_0000; // Este endereco e máscara vão selecionar GPIO para
     localparam GPIO_ADDR_MASK = 32'h FFFF_FF00; // qualquer endereco na faixa de C000_0000 a C000_00FF
     wire gpio_selected = ((cpu_addr & GPIO_ADDR_MASK) == GPIO_ADDR_BASE);
+
+    // Mapeamento da UART1				
+    localparam UART1_ADDR_BASE = 32'h C000_1000; // Este endereco e máscara vão selecionar a UART para
+    localparam UART1_ADDR_MASK = 32'h FFFF_FF00; // qualquer endereco na faixa de C000_1000 a C000_10FF
+    wire uart1_selected = ((cpu_addr & UART1_ADDR_MASK) == UART1_ADDR_BASE);
     
     // Mux/Demux Devices
     assign mem_valid  = cpu_valid & mem_selected;
     assign gpio_valid = cpu_valid & gpio_selected;
+    assign uart1_valid = cpu_valid & uart1_selected;
 
-    // Mux para o sinal de ready
+	// Mux para o sinal de ready
 	assign cpu_ready = (mem_selected) ? mem_ready :
-    				   (gpio_selected) ? gpio_ready : 1'b0;
+                       (gpio_selected) ? gpio_ready :
+    				   (uart1_selected) ? uart1_ready : 1'b0;
 
 	// Mux para das leituras de dados 
-	assign cpu_rdata = (mem_selected) ? mem_rdata :
-					   (gpio_selected) ? gpio_rdata : 32'h0000_0000;
+	assign cpu_rdata  = (mem_selected) ? mem_rdata :
+                       (gpio_selected) ? gpio_rdata :
+					   (uart1_selected) ? uart1_rdata : 32'h0000_0000;
 
     /*********************************************************************************
     * CPU Instance (maRVin_cpu)
@@ -120,6 +126,22 @@ module maRVin (
         .ready    (gpio_ready),
         .data_out (gpio_rdata),
         .gpio     (gpio)
+    );
+
+    /*********************************************************************************
+    * UART1 Instance
+    *********************************************************************************/
+    maRVin_uart #(.CLOCK_FREQ(1600), .BAUDRATE(100)) _maRVin_uart (
+        .clk  (clk),
+        .nrst (nrst),
+        .address  (cpu_addr),
+        .data_in  (cpu_wdata),
+        .wmask    (cpu_wmask),
+        .valid    (uart1_valid),
+        .ready    (uart1_ready),
+        .data_out (uart1_rdata),	
+        .uart_tx  (uart1_tx),
+        .uart_rx  (uart1_rx)
     );
 
 endmodule

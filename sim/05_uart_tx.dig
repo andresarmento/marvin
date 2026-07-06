@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="utf-8"?>
+<circuit>
+  <version>2</version>
+  <attributes/>
+  <visualElements>
+    <visualElement>
+      <elementName>ExternalFile</elementName>
+      <elementAttributes>
+        <entry>
+          <string>applicationType</string>
+          <appType>IVERILOG</appType>
+        </entry>
+        <entry>
+          <string>Label</string>
+          <string>maRVin</string>
+        </entry>
+        <entry>
+          <string>externalInputs</string>
+          <string>clk,nrst, uart1_rx</string>
+        </entry>
+        <entry>
+          <string>externalOutputs</string>
+          <string>address:32,gpio:32,uart1_tx</string>
+        </entry>
+        <entry>
+          <string>Width</string>
+          <int>14</int>
+        </entry>
+        <entry>
+          <string>iverilogOptions</string>
+          <string>C:\\Users\\andre\\Downloads\\PROJECTS\\marvin\\rtl\\marvin_cpu.v
+C:\\Users\\andre\\Downloads\\PROJECTS\\marvin\\rtl\\marvin_mem.v
+C:\\Users\\andre\\Downloads\\PROJECTS\\marvin\\rtl\\marvin_gpio.v
+C:\\Users\\andre\\Downloads\\PROJECTS\\marvin\\rtl\\marvin_uart.v</string>
+        </entry>
+        <entry>
+          <string>CodeFile</string>
+          <file>C:\Users\andre\Downloads\PROJECTS\marvin\rtl\marvin.v</file>
+        </entry>
+      </elementAttributes>
+      <pos x="560" y="400"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Out</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Label</string>
+          <string>address</string>
+        </entry>
+        <entry>
+          <string>Bits</string>
+          <int>32</int>
+        </entry>
+      </elementAttributes>
+      <pos x="1200" y="280"/>
+    </visualElement>
+    <visualElement>
+      <elementName>In</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Label</string>
+          <string>Reset</string>
+        </entry>
+        <entry>
+          <string>InDefault</string>
+          <value v="1" z="false"/>
+        </entry>
+      </elementAttributes>
+      <pos x="580" y="260"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Clock</elementName>
+      <elementAttributes>
+        <entry>
+          <string>runRealTime</string>
+          <boolean>true</boolean>
+        </entry>
+        <entry>
+          <string>Label</string>
+          <string>Clock</string>
+        </entry>
+        <entry>
+          <string>Frequency</string>
+          <int>1600</int>
+        </entry>
+      </elementAttributes>
+      <pos x="580" y="200"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Splitter</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Input Splitting</string>
+          <string>32</string>
+        </entry>
+        <entry>
+          <string>Output Splitting</string>
+          <string>0-0, 1-1</string>
+        </entry>
+      </elementAttributes>
+      <pos x="1060" y="420"/>
+    </visualElement>
+    <visualElement>
+      <elementName>LED</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Label</string>
+          <string>gpio_0</string>
+        </entry>
+      </elementAttributes>
+      <pos x="1200" y="420"/>
+    </visualElement>
+    <visualElement>
+      <elementName>LED</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Label</string>
+          <string>gpio_1</string>
+        </entry>
+      </elementAttributes>
+      <pos x="1200" y="460"/>
+    </visualElement>
+    <visualElement>
+      <elementName>External</elementName>
+      <elementAttributes>
+        <entry>
+          <string>applicationType</string>
+          <appType>IVERILOG</appType>
+        </entry>
+        <entry>
+          <string>Label</string>
+          <string>uart_rx</string>
+        </entry>
+        <entry>
+          <string>externalInputs</string>
+          <string>clk,rst_n,rx</string>
+        </entry>
+        <entry>
+          <string>Code</string>
+          <string>// ============================================================
+// uart_rx.v  -  Receptor UART 8N1 com oversampling 16x
+// ------------------------------------------------------------
+// Para uso como componente Verilog dentro do Digital (Neemann).
+//
+// Ligacao ao &quot;Terminal&quot; do Digital (Data / Clock / Enable):
+//   data[7:0] -&gt; Data  do Terminal
+//   wr        -&gt; Clock do Terminal   (pulso de 1 ciclo, borda de subida captura)
+//   wr        -&gt; Enable do Terminal  (ou fixe Enable = 1)
+//
+// Timing:
+//   - Alimente &apos;clk&apos; com o clock de sistema do Digital.
+//   - Cada bit UART dura 16 bordas de &apos;clk&apos; (oversampling 16x).
+//   - Ou seja: baud_do_TX = frequencia_de_clk / 16.
+//   - Dentro do Digital, aplique 16 pulsos de clock por bit transmitido.
+//
+// Frame: 1 start (0), 8 dados LSB-first, 1 stop (1). Sem paridade.
+// Linha em repouso (idle) = 1.
+// ============================================================
+
+module uart_rx #(
+    // Especifique a frequencia do clock e o baud rate.
+    // O oversampling (clocks por bit) e calculado: OVS = CLK_FREQ / BAUD.
+    // Ex.: CLK_FREQ = 1600, BAUD = 100  -&gt;  OVS = 16.
+    // No Digital, ajuste estes parametros na caixa do componente.
+    // IMPORTANTE: CLK_FREQ deve ser multiplo inteiro de BAUD; caso
+    // contrario ha arredondamento e o ponto de amostragem desloca.
+    parameter CLK_FREQ = 1600,   // frequencia de &apos;clk&apos; (Hz)
+    parameter BAUD     = 100     // baud rate do TX (bps)
+) (
+    input  wire       clk,      // clock de sistema (CLK_FREQ Hz)
+    input  wire       rst_n,    // reset sincrono, ativo em 0 (logica negativa)
+    input  wire       rx,       // linha serial vinda do TX (idle = 1)
+    output reg  [7:0] data,     // byte recebido -&gt; Data do Terminal
+    output reg        wr        // pulso 1 ciclo -&gt; Clock/Enable do Terminal
+);
+
+    // Oversampling derivado: clocks de &apos;clk&apos; por bit UART.
+    localparam OVS = CLK_FREQ / BAUD;
+
+    // Estados
+    localparam ST_IDLE  = 2&apos;d0;
+    localparam ST_START = 2&apos;d1;
+    localparam ST_DATA  = 2&apos;d2;
+    localparam ST_STOP  = 2&apos;d3;
+
+    reg [1:0] state;
+    reg [$clog2(OVS)-1:0] os_cnt;  // contador de oversampling (0..OVS-1)
+    reg [2:0] bit_cnt;   // contador de bits de dados (0..7)
+    reg [7:0] shreg;     // registrador de deslocamento
+
+    // Sincronizador de entrada (2 flip-flops) contra metaestabilidade
+    reg rx_s1, rx_s2;
+    always @(posedge clk) begin
+        rx_s1 &lt;= rx;
+        rx_s2 &lt;= rx_s1;
+    end
+    wire rx_sync = rx_s2;
+
+    always @(posedge clk) begin
+        if (!rst_n) begin
+            state   &lt;= ST_IDLE;
+            os_cnt  &lt;= 0;
+            bit_cnt &lt;= 3&apos;d0;
+            shreg   &lt;= 8&apos;d0;
+            data    &lt;= 8&apos;d0;
+            wr      &lt;= 1&apos;b0;
+        end else begin
+            wr &lt;= 1&apos;b0;  // wr por padrao baixo; sobe so por 1 ciclo no fim
+
+            case (state)
+                // ------------------------------------------------
+                ST_IDLE: begin
+                    os_cnt  &lt;= 0;
+                    bit_cnt &lt;= 3&apos;d0;
+                    // borda de descida = possivel start bit
+                    if (rx_sync == 1&apos;b0)
+                        state &lt;= ST_START;
+                end
+
+                // ------------------------------------------------
+                // Espera ate o MEIO do start bit (8 amostras) e
+                // confirma que ainda esta em 0 (start valido).
+                ST_START: begin
+                    if (os_cnt == (OVS/2 - 1)) begin
+                        os_cnt &lt;= 0;
+                        if (rx_sync == 1&apos;b0)
+                            state &lt;= ST_DATA;   // start confirmado
+                        else
+                            state &lt;= ST_IDLE;   // ruido: aborta
+                    end else begin
+                        os_cnt &lt;= os_cnt + 1&apos;b1;
+                    end
+                end
+
+                // ------------------------------------------------
+                // Amostra cada bit de dado no seu centro:
+                // 16 amostras apos o meio do start caimos no meio
+                // de cada bit de dado.
+                ST_DATA: begin
+                    if (os_cnt == (OVS - 1)) begin
+                        os_cnt &lt;= 0;
+                        shreg  &lt;= {rx_sync, shreg[7:1]}; // LSB-first
+                        if (bit_cnt == 3&apos;d7)
+                            state &lt;= ST_STOP;
+                        else
+                            bit_cnt &lt;= bit_cnt + 3&apos;d1;
+                    end else begin
+                        os_cnt &lt;= os_cnt + 1&apos;b1;
+                    end
+                end
+
+                // ------------------------------------------------
+                // Centro do stop bit. Se = 1, byte valido -&gt; pulso wr.
+                // OBS: o Terminal do Digital trata tanto CR (0x0D) quanto
+                // LF (0x0A) como quebra de linha. Enviar &quot;\r\n&quot; pularia
+                // DUAS linhas. Por isso suprimimos o CR aqui: o pulso &apos;wr&apos;
+                // nao e gerado para 0x0D, deixando apenas o LF quebrar a
+                // linha. (Se preferir manter o CR, remova o teste != 8&apos;h0D.)
+                ST_STOP: begin
+                    if (os_cnt == (OVS - 1)) begin
+                        os_cnt &lt;= 0;
+                        if (rx_sync == 1&apos;b1 &amp;&amp; shreg != 8&apos;h0D) begin
+                            data &lt;= shreg;  // byte pronto
+                            wr   &lt;= 1&apos;b1;   // pulso para o Terminal
+                        end
+                        state &lt;= ST_IDLE;
+                    end else begin
+                        os_cnt &lt;= os_cnt + 1&apos;b1;
+                    end
+                end
+
+                default: state &lt;= ST_IDLE;
+            endcase
+        end
+    end
+
+endmodule</string>
+        </entry>
+        <entry>
+          <string>externalOutputs</string>
+          <string>data:8,wr</string>
+        </entry>
+        <entry>
+          <string>Width</string>
+          <int>8</int>
+        </entry>
+      </elementAttributes>
+      <pos x="980" y="540"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Terminal</elementName>
+      <elementAttributes/>
+      <pos x="1220" y="540"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Const</elementName>
+      <elementAttributes/>
+      <pos x="1200" y="580"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Const</elementName>
+      <elementAttributes/>
+      <pos x="520" y="440"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>NetName</string>
+          <string>clk</string>
+        </entry>
+      </elementAttributes>
+      <pos x="620" y="200"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>NetName</string>
+          <string>nrst</string>
+        </entry>
+      </elementAttributes>
+      <pos x="620" y="260"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="2"/>
+        </entry>
+        <entry>
+          <string>NetName</string>
+          <string>nrst</string>
+        </entry>
+      </elementAttributes>
+      <pos x="520" y="420"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="2"/>
+        </entry>
+        <entry>
+          <string>NetName</string>
+          <string>nrst</string>
+        </entry>
+      </elementAttributes>
+      <pos x="960" y="560"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="2"/>
+        </entry>
+        <entry>
+          <string>NetName</string>
+          <string>clk</string>
+        </entry>
+      </elementAttributes>
+      <pos x="960" y="540"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="2"/>
+        </entry>
+        <entry>
+          <string>NetName</string>
+          <string>clk</string>
+        </entry>
+      </elementAttributes>
+      <pos x="520" y="400"/>
+    </visualElement>
+  </visualElements>
+  <wires>
+    <wire>
+      <p1 x="960" y="560"/>
+      <p2 x="980" y="560"/>
+    </wire>
+    <wire>
+      <p1 x="1140" y="560"/>
+      <p2 x="1220" y="560"/>
+    </wire>
+    <wire>
+      <p1 x="520" y="400"/>
+      <p2 x="560" y="400"/>
+    </wire>
+    <wire>
+      <p1 x="840" y="400"/>
+      <p2 x="880" y="400"/>
+    </wire>
+    <wire>
+      <p1 x="840" y="420"/>
+      <p2 x="1060" y="420"/>
+    </wire>
+    <wire>
+      <p1 x="520" y="420"/>
+      <p2 x="560" y="420"/>
+    </wire>
+    <wire>
+      <p1 x="1080" y="420"/>
+      <p2 x="1200" y="420"/>
+    </wire>
+    <wire>
+      <p1 x="880" y="580"/>
+      <p2 x="980" y="580"/>
+    </wire>
+    <wire>
+      <p1 x="1200" y="580"/>
+      <p2 x="1220" y="580"/>
+    </wire>
+    <wire>
+      <p1 x="580" y="260"/>
+      <p2 x="620" y="260"/>
+    </wire>
+    <wire>
+      <p1 x="580" y="200"/>
+      <p2 x="620" y="200"/>
+    </wire>
+    <wire>
+      <p1 x="840" y="440"/>
+      <p2 x="880" y="440"/>
+    </wire>
+    <wire>
+      <p1 x="520" y="440"/>
+      <p2 x="560" y="440"/>
+    </wire>
+    <wire>
+      <p1 x="1080" y="440"/>
+      <p2 x="1140" y="440"/>
+    </wire>
+    <wire>
+      <p1 x="880" y="280"/>
+      <p2 x="1200" y="280"/>
+    </wire>
+    <wire>
+      <p1 x="1140" y="540"/>
+      <p2 x="1220" y="540"/>
+    </wire>
+    <wire>
+      <p1 x="960" y="540"/>
+      <p2 x="980" y="540"/>
+    </wire>
+    <wire>
+      <p1 x="1140" y="460"/>
+      <p2 x="1200" y="460"/>
+    </wire>
+    <wire>
+      <p1 x="880" y="440"/>
+      <p2 x="880" y="580"/>
+    </wire>
+    <wire>
+      <p1 x="880" y="280"/>
+      <p2 x="880" y="400"/>
+    </wire>
+    <wire>
+      <p1 x="1140" y="440"/>
+      <p2 x="1140" y="460"/>
+    </wire>
+  </wires>
+  <measurementOrdering/>
+</circuit>
