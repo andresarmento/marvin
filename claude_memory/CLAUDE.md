@@ -22,6 +22,7 @@ rtl/            Fontes Verilog do SoC
   marvin_cpu.v    CPU placeholder (baseada em FemtoRV32 Quark)
   marvin_mem.v    Memória unificada (ROM + RAM)
   marvin_gpio.v   Periférico GPIO (DIR/OUT, saída apenas por enquanto)
+  marvin_uart.v   Periférico UART (8N1, sem FIFO, sem interrupção; TX+RX)
 sim/            Simulação (atualmente 00_soc.dig — Digital simulator)
 sw/             Software / firmware
   startup/        crt0.S (startup compartilhado, fora da lib de drivers)
@@ -50,10 +51,10 @@ memória vs. driver de periférico), decisão confirmada com o usuário em 2026-
   `mem_valid`, `mem_ready`.
 - **Decodificador de endereço** (adicionado em 2026-07-05, antes não existia —
   a CPU só enxergava a memória, ligação direta sem decisão de endereço nenhuma):
-  `rom_selected`/`ram_selected`/`gpio_selected` decodificados combinacionalmente
-  a partir de `cpu_addr`, roteando `mem_valid`/`gpio_valid` pro periférico certo
-  e muxando `cpu_ready`/`cpu_rdata` de volta pra CPU. Mapa completo em
-  [[ARCHITECTURE]].
+  `rom_selected`/`ram_selected`/`gpio_selected`/`uart1_selected` decodificados
+  combinacionalmente a partir de `cpu_addr`, roteando `mem_valid`/`gpio_valid`/
+  `uart1_valid` pro periférico certo e muxando `cpu_ready`/`cpu_rdata` de volta
+  pra CPU. Mapa completo em [[ARCHITECTURE]].
 - Sinais de debug expostos no topo: `dbg_x1`, `dbg_x2`, `dbg_x15` (`dbg_state` foi
   removido da lista de portas do topo, mas continua existindo como porta de saída
   não conectada em `marvin_cpu.v` — se precisar de volta, é só reconectar).
@@ -138,6 +139,54 @@ adicionado em 2026-07-05:
   (lê `GPIO_OUT`, refletindo o estado de saída do pino), `gpio_dir`,
   `gpio_toggle` (`gpio_write(pin, !gpio_read(pin))`).
 
+**UART1 (`maRVin_uart` em rtl/marvin_uart.v)** — segundo periférico do SoC,
+adicionado em 2026-07-06:
+- Endereço base `0xC000_1000`, registradores `UART1_TX` (offset `0x00`, escrita),
+  `UART1_RX` (offset `0x04`, leitura) e `UART1_STAT` (offset `0x08`: bit0 =
+  `ready_tx`, bit1 = `available_rx`). 8N1, sem FIFO, sem interrupção — TX e RX
+  cada um com sua própria máquina de estados (`IDLE`/`START`/`DATA`/`STOP`) e
+  contador de ticks (`BIT_PERIOD = CLOCK_FREQ / BAUDRATE`, em ciclos de clock).
+- **Convenção de polaridade**: o driver usa `ready_tx` (1 = livre pra transmitir),
+  não `busy_tx` (1 = ocupado) — decisão do usuário por ser o padrão mais comum em
+  periféricos reais (flag ativo-alto = estado "bom"/pronto, não "ruim"/ocupado).
+  O RTL originalmente usava `busy_tx`; foi renomeado e a polaridade invertida em
+  todos os pontos (reset, IDLE, início de transmissão, fim do STOP, contador de
+  ticks, permissão de escrita no TX port, montagem do status) pra bater com
+  `uart1_ready_tx()` no driver C.
+- **Dois bugs sérios encontrados e corrigidos no RTL durante revisão** (ver
+  [[CHANGELOG]] 2026-07-06 para o histórico completo):
+  1. RX travava pra sempre: `DATA_bit`/`STOP_bit` comparavam
+     `tick_count_rx == BIT_PERIOD`, mas o contador nunca atinge esse valor (reseta
+     ao chegar em `BIT_PERIOD - 1`) — corrigido pra `== BIT_PERIOD - 1`, igual ao
+     padrão já usado no lado TX.
+  2. Mistura de atribuição bloqueante (`=`) com não-bloqueante (`<=`) pros
+     registradores de estado (`tx_state`/`rx_state`) dentro de blocos sequenciais
+     — trocado tudo pra `<=` por consistência/segurança.
+  Ambos verificados com uma testbench Icarus Verilog descartável (fora do repo,
+  como já é hábito neste projeto): TX decodificado corretamente na linha serial,
+  RX recebendo dois bytes consecutivos sem travar.
+- Driver C em `sw/marvin_lib/` (`marvin_uart.h/.c`): `uart1_ready_tx`,
+  `uart1_available`, `uart1_getc`/`uart1_putc`, `uart1_read`/`uart1_write`
+  (buffers `unsigned char*` — podem carregar binário), `uart1_readline`/
+  `uart1_writeline` (buffers `char*` — texto; cast explícito pra
+  `unsigned char*` só no ponto em que `uart1_writeline` chama `uart1_write`),
+  `uart1_strlen` (reimplementado pra não depender de libc). `uart1_getc`/
+  `uart1_read`/`uart1_readline` **não bloqueiam** em `uart1_available()` por
+  padrão (documentado no header) — variantes bloqueantes existem à parte
+  (`uart1_getc_blocking`, `uart1_readline_blocking`), seguindo o mesmo padrão de
+  `getc`+`_blocking` visto em SDKs reais (Raspberry Pi Pico SDK, STM32 HAL).
+- **Pendência conhecida**: a instância em `rtl/marvin.v` usa
+  `CLOCK_FREQ(100)/BAUDRATE(10)` — valores de placeholder (iguais aos defaults
+  do próprio módulo para simulação), não a frequência real do clock do SoC nem
+  um baud rate padrão. Precisa ser ajustado antes de testar com hardware/terminal
+  serial real. Ver [[TODO]].
+- **Preferência do usuário para uma futura segunda UART**: em vez de generalizar
+  o driver pra receber um handle/endereço base como parâmetro (padrão de HALs
+  "profissionais" tipo STM32 HAL), a preferência é duplicar o padrão já usado
+  (`uart2_*`/`UART2_BASE` num novo par de arquivos), mantendo a lib direta e sem
+  abstração — consistente com [[feedback_marvin_lib_scope]]. Ainda não
+  implementado, só uma decisão de design discutida e registrada.
+
 ## Programas de teste (`sw/examples/`)
 
 Três programas `.hex` escritos manualmente (RV32I puro, sem toolchain/assembler —
@@ -165,6 +214,10 @@ com seu próprio `makefile` (padrão estabelecido em `02_loop_c`, ver [[TODO]] e
 - `sw/examples/03_gpio_out/` — usa `marvin_lib` (`marvin_gpio.h/.c`) pra piscar
   os pinos 0/1 do GPIO em loop com delay. Primeiro programa a exercitar o
   decodificador de endereço do topo e a pegadinha de FSM/shift documentada acima.
+- `sw/examples/04_gpio_in/` — GPIO de entrada, ver [[CHANGELOG]] (2026-07-05).
+- `sw/examples/05_uart_tx/` (`uart_tx.c`, renomeado de `05_uart`/`uart.c` em
+  2026-07-06) — pisca GPIO 0/1 e manda `"Hello World!"` via `uart1_writeline`
+  em loop. Primeiro programa a exercitar a UART.
 
 ## Known Issues / Pontos de atenção
 
@@ -181,6 +234,9 @@ com seu próprio `makefile` (padrão estabelecido em `02_loop_c`, ver [[TODO]] e
   mas não implementado no RTL ainda.
 - Barramento `gpio` é `[31:0]` dentro de `marvin_gpio.v` mas só `[3:0]` chegam
   no topo do SoC — bits `[31:4]` ficam sem conexão real (leem `X`).
+- Instância da UART em `rtl/marvin.v` usa `CLOCK_FREQ(100)/BAUDRATE(10)` —
+  placeholders de simulação, não a frequência real do clock do SoC nem um baud
+  rate padrão. Precisa corrigir antes de testar em hardware/terminal real.
 
 ## Convenções observadas no código
 
