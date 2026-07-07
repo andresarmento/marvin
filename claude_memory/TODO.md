@@ -13,7 +13,14 @@ usuário mantém uma lista curta lá; esta aqui é a versão detalhada.
       documentado em [[ARCHITECTURE]].
 - [ ] Criar algum mecanismo para trocar qual `.hex` é carregado sem editar o RTL
       (hoje o nome do arquivo está hardcoded no `initial $readmemh` de
-      `marvin_mem.v`, atualmente `sw/examples/04_gpio_in/gpio_in.hex`).
+      `marvin_mem.v`, atualmente `sw/examples/05_uart_tx/uart_tx.hex`).
+- [ ] Corrigir `CLOCK_FREQ(100)/BAUDRATE(10)` na instância da UART em
+      `rtl/marvin.v` — são placeholders de simulação, precisam virar a
+      frequência real do clock do SoC e um baud rate padrão antes de testar em
+      hardware/terminal serial de verdade. Ver [[CLAUDE]] (2026-07-06).
+- [ ] Testar a entrada da UART (RX) — TX já validado em simulação e no exemplo
+      `05_uart_tx`; RX só foi exercitado por testbench Icarus, ainda não por
+      hardware/exemplo real (item também está no TODO do `README.md`).
 - [ ] Antes de sintetizar pra FPGA de verdade: reverter o workaround de
       `gpio_out`/`gpio_in` em `rtl/marvin.v` pra `inout [31:0] gpio` (interface já
       deixada comentada no topo do arquivo) e garantir pull-up/down (interno da
@@ -29,8 +36,13 @@ usuário mantém uma lista curta lá; esta aqui é a versão detalhada.
 - [x] GPIO de entrada — registradores `GPIO_READ`/`GPIO_DIR_*`/`GPIO_SET`/`GPIO_CLR`/
       `GPIO_TOG` implementados e testados com pino externo real (`04_gpio_in`,
       Digital + Icarus). Ver [[CHANGELOG]] (2026-07-05).
-- [ ] UART para debug/output — próximo periférico, mesma estrutura do GPIO
-      (driver em `marvin_lib`, módulo RTL, decodificador em `marvin.v`).
+- [x] UART (TX+RX) — periférico `rtl/marvin_uart.v` + driver `sw/marvin_lib/`
+      (`marvin_uart.h/.c`) + exemplo `sw/examples/05_uart_tx/`. Ver
+      [[CHANGELOG]] (2026-07-06) para os dois bugs de RTL encontrados e
+      corrigidos, e [[ARCHITECTURE]] para o mapa de registradores.
+- [ ] Suportar uma segunda UART — decisão de design já discutida (duplicar
+      `uart2_*`/`UART2_BASE`, não generalizar com handle), mas ainda não
+      implementada. Ver [[CLAUDE]] (2026-07-06).
 - [ ] Separar ROM e RAM em módulos distintos (hoje é uma memória única com mapeamento
       de endereço) — avaliar se vale a pena ou se o modelo atual é suficiente.
 - [ ] Planejar substituição do `marvin_cpu.v` (placeholder FemtoRV32) pela CPU
@@ -46,6 +58,10 @@ usuário mantém uma lista curta lá; esta aqui é a versão detalhada.
 
 ## Concluído recentemente (ver [[CHANGELOG]] para detalhes)
 
+- [x] UART (TX+RX): driver `marvin_uart.h/.c`, periférico `marvin_uart.v`,
+      integração em `marvin.v`, exemplo `05_uart_tx`, dois bugs de RTL
+      encontrados e corrigidos (contador de RX travando, atribuições
+      bloqueantes misturadas). (2026-07-06)
 - [x] GPIO de entrada: registradores atômicos (`GPIO_READ`/`SET`/`CLR`/`TOG`/
       `DIR_*`), exemplo `04_gpio_in`, bug de travamento por pino flutuante
       diagnosticado e corrigido (workaround `gpio_out`/`gpio_in` no Digital,

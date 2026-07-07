@@ -6,7 +6,6 @@ Por enquanto vou usando a atual para poder ir avançando o SoC
 
 ## TODO
 
-* Testar a entrada da Serial (RX)
 * FPGA test
 * Memory mapper
 * Timer
@@ -23,3 +22,4 @@ Por enquanto vou usando a atual para poder ir avançando o SoC
 * GPIO (output)
 * GPIO (input)
 * Interface Serial (UART TX)
+* Interface Serial (UART RX)

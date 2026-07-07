@@ -2,6 +2,72 @@
 
 Formato: data (AAAA-MM-DD) + o que mudou e por quê. Entradas mais recentes no topo.
 
+## 2026-07-06 — Segundo periférico (UART1, TX+RX) e dois bugs sérios no RTL
+
+- Criado o driver `sw/marvin_lib/` (`marvin_uart.h/.c`): `uart1_ready_tx`,
+  `uart1_available`, `uart1_getc`/`uart1_putc`, `uart1_read`/`uart1_write`
+  (`unsigned char*`, pra binário), `uart1_readline`/`uart1_writeline` (`char*`,
+  pra texto, com `max_size` limitando `readline` contra overflow de buffer),
+  `uart1_strlen` (reimplementado, sem depender de libc), e as variantes
+  bloqueantes `uart1_getc_blocking`/`uart1_readline_blocking`. Contrato definido:
+  `getc`/`read`/`readline` não bloqueiam em `uart1_available()` por padrão
+  (documentado no header); `putc`/`write`/`writeline` sempre bloqueiam em
+  `uart1_ready_tx()`. Revisão em várias rodadas corrigiu: mismatch de nomes
+  `uart_*` vs `uart1_*` entre chamadas internas (não compilava), lógica
+  invertida num dos loops de espera, ausência de `(void)` nos protótipos sem
+  argumento, e narrowing implícito `unsigned char`→`char` nos buffers de texto
+  (resolvido separando os tipos por função em vez de espalhar `unsigned char*`
+  por toda a API).
+- Criado `rtl/marvin_uart.v` pelo usuário (8N1, sem FIFO, sem interrupção; TX e
+  RX cada um com sua FSM `IDLE/START/DATA/STOP` e contador de ticks). Revisão
+  encontrou e corrigiu dois bugs sérios:
+  1. **RX travava pra sempre**: `DATA_bit`/`STOP_bit` comparavam
+     `tick_count_rx == BIT_PERIOD`, valor que o contador nunca atinge de fato
+     (reseta ao chegar em `BIT_PERIOD - 1`, seguindo o mesmo padrão já correto
+     do lado TX). Corrigido pra `== BIT_PERIOD - 1`.
+  2. Atribuição bloqueante (`=`) misturada com não-bloqueante (`<=`) pros
+     registradores de estado `tx_state`/`rx_state`, em três pontos dentro de
+     blocos `always @(posedge clk)` — corrigido pra `<=` em todos.
+  Verificado com uma testbench Icarus Verilog descartável (fora do repo, hábito
+  já estabelecido neste projeto): byte TX (`0xA5`) decodificado corretamente na
+  linha serial simulada; dois bytes RX (`0x3C`, `0x5A`) recebidos em sequência
+  sem travar, confirmando que a correção do contador resolveu o travamento.
+- **Renomeação de polaridade**: `busy_tx` (1=ocupado) virou `ready_tx`
+  (1=pronto) no RTL, decisão do usuário por ser o padrão mais comum em
+  periféricos reais (flag ativo-alto = estado "bom", não "ruim"). Todos os usos
+  atualizados (reset, IDLE, início de TX, fim do STOP, contador de ticks,
+  permissão de escrita, status port) pra bater com `uart1_ready_tx()` no driver
+  C (que também passou por uma renomeação em duas etapas: `uart1_txbusy` →
+  `uart1_txready` → `uart1_ready_tx`, essa última pra casar com o sufixo
+  `_tx`/`_rx` já usado no RTL, `busy_tx`/`busy_rx`/`available_rx`).
+- UART integrada em `rtl/marvin.v`: instanciada em `UART1_ADDR_BASE=0xC000_1000`
+  (máscara `0xFFFF_FF00`, mesma janela de 256 bytes do padrão GPIO), com
+  `uart1_valid`/`uart1_ready`/`uart1_rdata` entrando nos muxes de
+  `cpu_ready`/`cpu_rdata` junto com mem/gpio. **Pendência**: a instância usa
+  `CLOCK_FREQ(100)/BAUDRATE(10)` — placeholders de simulação (mesmos valores
+  dos defaults do próprio módulo), não a frequência real do clock do SoC nem um
+  baud rate padrão; precisa ajustar antes de testar em hardware/terminal real.
+  Elaboração completa do SoC (`marvin.v` + todos os submódulos) confirmada sem
+  erros no Icarus Verilog depois da integração.
+- Usuário corrigiu, por conta própria, um bug pré-existente e não relacionado
+  em `rtl/marvin.v`: um `wire [2:0] gpio;` redeclarando o `gpio` que já era
+  porta `inout [31:0]` no cabeçalho do módulo, mais referências soltas a
+  `gpio_out`/`gpio_in` nunca declaradas (sobra de um rascunho anterior, com um
+  comentário `//Tests` do lado) — impedia o arquivo de compilar.
+- Criado `sw/examples/05_uart_tx/` (`uart_tx.c`, renomeado de `05_uart`/`uart.c`
+  logo depois de criado) — pisca GPIO 0/1 e manda `"Hello World!"` via
+  `uart1_writeline` em loop. Makefile seguindo o padrão de `04_gpio_in` (só
+  `APP_NAME` mudou). Caminho hardcoded do `.hex` em `marvin_mem.v` atualizado
+  pra `05_uart_tx/uart_tx.hex`. Build validado ponta a ponta com o toolchain
+  real, sem warnings.
+- **Decisão de design registrada, não implementada**: para suportar uma
+  segunda UART no futuro, a preferência do usuário é duplicar o padrão atual
+  (`uart2_*`/`UART2_BASE` em novos arquivos) em vez de generalizar o driver
+  com um handle/endereço base como parâmetro (padrão de HALs "profissionais"
+  tipo STM32 HAL) — consistente com a preferência já registrada de manter
+  `marvin_lib` direta e sem abstração prematura. Ver [[CLAUDE]] e
+  [[feedback_marvin_lib_scope]] (memória externa do Claude).
+
 ## 2026-07-05 — Primeiro periférico (GPIO) e dois bugs sérios na CPU
 
 - Criada a biblioteca de drivers `sw/marvin_lib/` (`include/`, `src/`), começando

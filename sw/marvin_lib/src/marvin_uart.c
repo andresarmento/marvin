@@ -85,6 +85,5 @@ void uart1_writeline(const char *str) {
     int len = (int)uart1_strlen(str);
     uart1_write((const unsigned char *)str, len);
     uart1_putc('\r');
-    
     uart1_putc('\n');
 }

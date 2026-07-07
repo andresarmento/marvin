@@ -10,11 +10,59 @@ inchar a memória principal conforme o SoC ganhar mais periféricos.
 | `0x0000_0000` – `0x7FFF_FFFF`  | ROM    | Programa, carregado via `$readmemh`       |
 | `0x8000_0000` – `0xBFFF_FFFF`  | RAM    | Selecionada por `RAM_ADDR_MASK=0xC000_0000` |
 | `0xC000_0000` – `0xC000_00FF`  | GPIO   | Selecionada por `GPIO_ADDR_MASK=0xFFFF_FF00` |
+| `0xC000_1000` – `0xC000_10FF`  | UART1  | Selecionada por `UART1_ADDR_MASK=0xFFFF_FF00` |
 
 Decodificação feita em `rtl/marvin.v` (`rom_selected`/`ram_selected`/
-`gpio_selected`), não dentro dos periféricos — `marvin_mem.v` e `marvin_gpio.v`
-recebem `valid` já filtrado pelo endereço correto (exceto pela sub-decodificação
-ROM-vs-RAM que `marvin_mem.v` ainda faz internamente, ver abaixo).
+`gpio_selected`/`uart1_selected`), não dentro dos periféricos — `marvin_mem.v`,
+`marvin_gpio.v` e `marvin_uart.v` recebem `valid` já filtrado pelo endereço
+correto (exceto pela sub-decodificação ROM-vs-RAM que `marvin_mem.v` ainda faz
+internamente, ver abaixo).
+
+### Registradores da UART1 (`rtl/marvin_uart.v`, base `0xC000_1000`)
+
+8N1, sem FIFO, sem interrupção. Adicionada em 2026-07-06.
+
+| Offset  | Registrador   | Descrição                                          |
+|---------|----------------|------------------------------------------------------|
+| `0x00`  | `UART1_TX`     | Escrita: enfileira um byte pra transmitir (só aceita se `ready_tx=1`) |
+| `0x04`  | `UART1_RX`     | Leitura: último byte recebido (bits `[7:0]`)         |
+| `0x08`  | `UART1_STAT`   | bit0 = `ready_tx` (1=livre pra transmitir), bit1 = `available_rx` (1=byte recebido esperando leitura) |
+
+**Polaridade de `ready_tx` (não `busy_tx`):** decisão do usuário em 2026-07-06 —
+um flag ativo-alto de "pronto" é mais comum em periféricos reais do que um
+ativo-alto de "ocupado". O RTL foi renomeado de `busy_tx` pra `ready_tx` com a
+polaridade invertida em todos os pontos que o usam (reset, estado IDLE, início
+de transmissão, fim do STOP bit, condição do contador de ticks, permissão de
+escrita no TX port, montagem do status). Ler `uart1_ready_tx()` no driver C
+espera exatamente essa convenção (bit0=1 quando pronto).
+
+**Contrato de bloqueio do driver C** (`sw/marvin_lib/marvin_uart.h/.c`):
+`uart1_getc`/`uart1_read`/`uart1_readline` **não bloqueiam** em
+`uart1_available()` — é responsabilidade de quem chama garantir que há dado
+novo, ou usar as variantes `uart1_getc_blocking`/`uart1_readline_blocking`.
+`uart1_putc`/`uart1_write`/`uart1_writeline` sempre bloqueiam em
+`uart1_ready_tx()` internamente (busy-wait), já que TX sempre vai ficar pronto
+eventualmente (garantia que precisa vir do RTL) e não há razão pra expor uma
+variante não-bloqueante do lado de escrita.
+
+**Tipos dos buffers**: `uart1_read`/`uart1_write` usam `unsigned char*` (podem
+carregar dado binário arbitrário); `uart1_readline`/`uart1_writeline`/
+`uart1_strlen` usam `char*` (orientados a texto, evita warning de assinatura de
+ponteiro ao passar literais de string tipo `"Hello World!"`). O único ponto de
+cruzamento (`uart1_writeline` chamando `uart1_write`) faz um cast explícito.
+
+**Dois bugs de RTL encontrados e corrigidos durante a revisão desta sessão**
+(ver [[CHANGELOG]] 2026-07-06):
+1. RX travava pra sempre — `DATA_bit`/`STOP_bit` comparavam
+   `tick_count_rx == BIT_PERIOD`, valor que o contador nunca atinge (reseta ao
+   chegar em `BIT_PERIOD - 1`, igual ao padrão já usado no lado TX). Corrigido
+   pra `== BIT_PERIOD - 1`.
+2. Atribuições bloqueantes (`=`) misturadas com não-bloqueantes (`<=`) pros
+   registradores `tx_state`/`rx_state` dentro de `always @(posedge clk)` — três
+   ocorrências corrigidas pra `<=`.
+Verificado com testbench Icarus Verilog descartável (fora do repo): byte TX
+decodificado corretamente na linha serial, dois bytes RX recebidos em sequência
+sem travar (confirma que o bug do contador foi realmente a causa do travamento).
 
 ### Registradores do GPIO (`rtl/marvin_gpio.v`, base `0xC000_0000`)
 
